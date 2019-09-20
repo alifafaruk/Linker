@@ -1,3 +1,4 @@
+//update
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
@@ -66,7 +67,7 @@ public class TwoPassLinker {
     	 
     	do {
     		  
-        	ArrayList<String> usedNotDef = new ArrayList<String>();
+        	ArrayList<Integer> usedNotDef = new ArrayList<Integer>();
     	//	ArrayList<Integer> sysMod = new ArrayList<Integer>();
     		String defList;
     		ModBaseLocation.put(ModNum, baseLoc);
@@ -122,7 +123,7 @@ public class TwoPassLinker {
 	    		
 	    		symbolsMod.add(nextDef);
 	    		ModDef.put(ModNum,symbolsMod );
-	    		usedNotDef.add(nextDef);
+	    		//usedNotDef.add(nextDef);
     		}
     	
     	}
@@ -162,17 +163,8 @@ public class TwoPassLinker {
     	
     	ModUseList.put(ModNum, ModUse);
     	
-     for(int i=0;i<ModUse.size();i=i+2) {
-    	 System.out.println((usedNotDef.contains(ModUse.get(i))));
-    	 System.out.println(ModUse);
-    	 if((usedNotDef.contains(ModUse.get(i))==false)) {
-    		 
-    		 System.out.println((baseLoc+Integer.parseInt(ModUse.get(i+1))+1));
-    		 symbolTable.put(ModUse.get(i), (baseLoc+Integer.parseInt(ModUse.get(i+1))+1));
-    		 
-    	 }
-     }
  
+    	check(ModNum,ModUseList.get(ModNum),useList);
     	int programText =Integer.parseInt(passInput.next().trim());
     	
     	 
@@ -413,7 +405,17 @@ public class TwoPassLinker {
 
    }
 	
-	
+	public static void check(int modNum,ArrayList<String>ModUse, ArrayList<String> usedNotDef) {
+		for(int i=0;i<ModUse.size();i=i+2) {
+			int  baseLoc=ModBaseLocation.get(modNum);
+	    	 if((usedNotDef.contains(ModUse.get(i))==false)) {
+	    		 
+	    		 
+	    		 symbolTable.put(ModUse.get(i), (baseLoc+Integer.parseInt(ModUse.get(i+1))+1));
+	    		 
+	    	 }
+	     }
+	}
     
     
     public static boolean checkTable(String sym,ArrayList<String> arr) {
