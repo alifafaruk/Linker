@@ -1,24 +1,42 @@
-//update
+/*
+ * Author ALifa Faruk
+ * Lab 1: Two Pass Linker
+ * Fall 2019
+ * 
+ */
+
 import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 
-
 public class TwoPassLinker {
+	
+	//Global variables that will be used through out the program
+	
+	//keeps track of the final addresses and the errors for each symbol in the table
     static HashMap<Integer, Integer >  FinalAddresses = new HashMap<Integer, Integer>();
     static HashMap<Integer, String >  FinalAddressesError = new HashMap<Integer, String>();
+    
+    //If there are errors in the useList or defList, collect the data
     static ArrayList<String> UsessError = new ArrayList<String>();
     static ArrayList<String> DefError = new ArrayList<String>();
+    
+    //External values not used
     static ArrayList<String> ExternalNotUse = new ArrayList<String>();
     static HashMap<Integer, String > externalNotOnChain = new HashMap<Integer, String >();
     
-  public static  HashMap<Integer, Integer >  external = new HashMap<Integer, Integer>();
-
+    public static  HashMap<Integer, Integer >  external = new HashMap<Integer, Integer>();
+    
+    //THe symbol table the collects info in the first pass
     static LinkedHashMap<String, Integer> symbolTable = new LinkedHashMap<String, Integer>();
     
+    //keep track of immediate values that need to be treated as an external value
     static ArrayList<Integer> ImEx = new ArrayList<Integer>();
+    
+    //global variable that will be used to check if machine size less that the absolute addresss
     static int machineMax=200;
-  //Mod Number and useList for that mod
+    
+    //Mod Number and useList for that mod
 	static LinkedHashMap<Integer, ArrayList<String>> ModUseList = new  LinkedHashMap<Integer, ArrayList<String>>();
 	
 	//Mod Number and list of texts
@@ -27,8 +45,6 @@ public class TwoPassLinker {
 	
 	static ArrayList<String> symbolsMod = new ArrayList<String>();
     static HashMap<String, Integer> defSize = new HashMap<String, Integer>();
-
-
 	 //Mod and base loc
 	static LinkedHashMap<Integer, Integer> ModBaseLocation = new LinkedHashMap<Integer,  Integer>();
    
@@ -42,15 +58,13 @@ public class TwoPassLinker {
     	
     	//All use List
     	ArrayList<String> useList = new ArrayList<String>();
-    	
-    	
-    	//ArrayList<Integer> symbolsLocation = new ArrayList<Integer>();
+
     	
     	
         //Check if defined or not
         LinkedHashMap<String,Integer> defMap = new LinkedHashMap<String,Integer>();        
        
-          
+       //get error messages   
         LinkedHashMap<String, String> SymbolerrorMessages= new LinkedHashMap<String, String>();
     	int baseLoc=0;
     	int symLoc=0;
@@ -63,11 +77,9 @@ public class TwoPassLinker {
     	 int absoluteAddress=0;
     	int ModNum=0;
     	
-    	
+  //First pass  in do while loop to get use entered values	
     	 
     	do {
-    		  
-        	ArrayList<Integer> usedNotDef = new ArrayList<Integer>();
     	//	ArrayList<Integer> sysMod = new ArrayList<Integer>();
     		String defList;
     		ModBaseLocation.put(ModNum, baseLoc);
@@ -91,7 +103,7 @@ public class TwoPassLinker {
     	for(int i=0; i<useCount;i++) {
     	
     		String nextDef=passInput.next().trim();
-    		 
+    		 //already exists
     		if (checkTable(nextDef,symbols)!=false) {
     			SymbolerrorMessages.put(nextDef, "Error: This variable is multiply defined; first value used.");
     			passInput.nextLine();
@@ -128,7 +140,7 @@ public class TwoPassLinker {
     	
     	}
     	}
-    	
+    	//process the useLine
         ArrayList<Integer > usesRepeat = new ArrayList< Integer>();
     	String useLine= passInput.next().trim();
     	
@@ -167,7 +179,7 @@ public class TwoPassLinker {
     	check(ModNum,ModUseList.get(ModNum),useList);
     	int programText =Integer.parseInt(passInput.next().trim());
     	
-    	 
+    	 //process the text line
     	baseLoc=baseLoc+programText;
     	ArrayList<Integer> textList = new ArrayList<Integer>();
     	modSize=programText;
@@ -187,11 +199,13 @@ public class TwoPassLinker {
     	ModNum++;
     	
     	}while(ModNum<numMod);
-    
+    	
+    	
+    	//now print the Symbols table
     	printSystemTable(symbolTable, SymbolerrorMessages);
    
    
-      
+     
     for(int j=0; j<useList.size()-1;j++) {
    
     	if(deflist.size()>j ) {
@@ -216,22 +230,22 @@ public class TwoPassLinker {
     	   LinkedHashMap<Integer, Integer> ModTextPostion = new LinkedHashMap<Integer, Integer>();
 
     	    int counter=0;
-  HashMap<Integer, Integer >  allE = new HashMap<Integer, Integer>();
-        ArrayList<String> usedInMod=ModUseList.get(mods);
-      int baseMod=  ModBaseLocation.get(mods);
+    	    HashMap<Integer, Integer >  allE = new HashMap<Integer, Integer>();
+    	    ArrayList<String> usedInMod=ModUseList.get(mods);
+    	    int baseMod=  ModBaseLocation.get(mods);
       
-    	//System.out.println(mods);
-    	int lastDigit=0;
-    	int address=0;
-    	int finalAddress=0;
-    	ArrayList<Integer> ModInstruction=ModText.get(mods);
-    	for (int x=0;x<ModInstruction.size();x=x+2) {
+    
+	    	int lastDigit=0;
+	    	int address=0;
+	    	int finalAddress=0;
+	    	ArrayList<Integer> ModInstruction=ModText.get(mods);
+	    	for (int x=0;x<ModInstruction.size();x=x+2) {
+	    		
+	    		ModTextPostion.put(x, ModInstruction.get(x));
+	    		lastDigit=getLastDigit(ModInstruction.get(x));
+	    		address= getAddress(ModInstruction.get(x), lastDigit);
     		
-    		ModTextPostion.put(x, ModInstruction.get(x));
-    		 lastDigit=getLastDigit(ModInstruction.get(x));
-    		 
-    		 address= getAddress(ModInstruction.get(x), lastDigit);
-    		
+	    	//check the types and put info in hashmap
     		if(lastDigit==1) {
     		//immediate; Unchanged	
     			 
@@ -264,7 +278,7 @@ public class TwoPassLinker {
     			//External; Resolved
     			int exceeds=0;
     			 
-    			 
+    			 //check if the instruction is not in the use list for external value or exceeds the size of the mod
 	    			 for(int i=0;i<usedInMod.size();i=i+2) {
 	 
 	 	    			 if(ModInstruction.contains(Integer.parseInt(usedInMod.get(i+1)))){
@@ -292,6 +306,7 @@ public class TwoPassLinker {
     		
     		else {
     			//Error
+    			System.out.println("NCorrect type not entered");
     		}
     		
     		count++;
@@ -303,8 +318,10 @@ public class TwoPassLinker {
         for(Integer key: keys){
         	Ekeys.add(key);
         }
+        
+        //proccess all External types. use a recursive method to get the chain of external values
     		
-    		ArrayList<String> def=ModDef.get(mods);
+    	ArrayList<String> def=ModDef.get(mods);
 		if(usedInMod.size()!=0) {
     			for(int j=0;j<usedInMod.size();j=j+2) {
     				
@@ -371,7 +388,7 @@ public class TwoPassLinker {
     }
     		 
 
-		
+//if value not on the chain treat as I		
 	    	if(external.isEmpty()==false) {
 	    		
 	    		for(Integer key: external.keySet()) {
@@ -384,40 +401,42 @@ public class TwoPassLinker {
 	   
 
    
-    
+   //print final addresses and error messages 
     Set<Integer> set= FinalAddressesError.keySet();
      
     for (Integer mod: FinalAddresses.keySet()){
-    	 
-        String key = mod.toString();
         if(set.contains(mod)){
         	 String value = FinalAddresses.get(mod).toString();  
              System.out.println(mod + ":" + value + " " +FinalAddressesError.get(mod)) ;  
         }
         else {
-        String value = FinalAddresses.get(mod).toString();  
-        System.out.println(mod + ":" + value);  
-	}
+	        String value = FinalAddresses.get(mod).toString();  
+	        System.out.println(mod + ":" + value);  
+        }
     }
+    
     checkSymbols(defMap,useList);
     usesError(UsessError);
     checkDefList(modSize);
 
    }
-	
+/*
+ * do basic checks
+ */
 	public static void check(int modNum,ArrayList<String>ModUse, ArrayList<String> usedNotDef) {
 		for(int i=0;i<ModUse.size();i=i+2) {
 			int  baseLoc=ModBaseLocation.get(modNum);
 	    	 if((usedNotDef.contains(ModUse.get(i))==false)) {
-	    		 
-	    		 
-	    		 symbolTable.put(ModUse.get(i), (baseLoc+Integer.parseInt(ModUse.get(i+1))+1));
+	    		symbolTable.put(ModUse.get(i), (baseLoc+Integer.parseInt(ModUse.get(i+1))+1));
 	    		 
 	    	 }
 	     }
 	}
     
-    
+    /*
+     * 
+     * check if symbol already in table
+     */
     public static boolean checkTable(String sym,ArrayList<String> arr) {
     	if(arr.isEmpty()) {
     		return false;
@@ -431,6 +450,9 @@ public class TwoPassLinker {
     	}
     }
     
+    /*
+     * returns an int of the last digit of the number
+     */
     public static int getLastDigit(int num) {	
     	
     		int last=num%10;
@@ -438,31 +460,38 @@ public class TwoPassLinker {
     	return last;
     }
     
-
+/*
+ * returns a arraylist of integer
+ */
     public static ArrayList<Integer> HmaptoArray(String[] list){
     	 ArrayList<Integer> values= new ArrayList<Integer>();
     	 int i=0;
     	 try {
     	 while(list[i]!=null) {
-    		 
     		 values.add(Integer.parseInt(list[i]));
     		 i++;
     	 }
     	 }catch(Exception ex) {}
     	 return values;
     }
-    
+    /*
+     * returns the address without the last digit that indicates the type
+     */
     public static int getAddress(int num, int lastDigit) {
     	int finalValue= num-lastDigit;
     	finalValue=finalValue/10;
     	return finalValue;
     }
+    
+    //get first digit of a number
     public static int getFirst(int num) {
     	int finalValue= (int)num/1000;
     	finalValue=finalValue*1000;
     	return finalValue;
     }
-    
+    /*
+     * helper function for checks
+     */
     public static void print(File file) throws Exception {
     	BufferedReader br = new BufferedReader(new FileReader(file));
     	 String line = null;
@@ -473,12 +502,11 @@ public class TwoPassLinker {
     	 }
     }
     
-    public static void secondPass() {
-    	System.out.println("\nMemory Map");
-    	int baseAddress=0;
-    	
-    }
-   
+
+   /*
+    * 
+    * returns void; Prints the symbol table
+    */
     public static void printSystemTable(LinkedHashMap<String, Integer> map,LinkedHashMap<String, String> errors ) {
     	 
     	Set<String>  errorKey= errors.keySet();
@@ -499,7 +527,9 @@ public class TwoPassLinker {
     	}
     }
     
-    
+    /*
+     * check if the symbols are already defined or defined outside the module
+     */
     public static void checkSymbols(LinkedHashMap<String, Integer> defMap, ArrayList<String> unusedDefList) {
     	//System.out.println("Checking if warning " + unusedDefList.size() );
     	ArrayList<String> notUsed= new ArrayList<String>();
@@ -513,7 +543,9 @@ public class TwoPassLinker {
     	  
     	    }
     }
-    
+    /*
+     * print errors in the usesline
+     */
     public static void usesError(ArrayList<String> repeat) {
     	for(int i=0; i<repeat.size();i++) {
     		System.err.println(repeat.get(i));
@@ -535,12 +567,12 @@ public class TwoPassLinker {
     }
     
     
-  
+  /*
+   * 
+   * used to find the chain of external values and their correct addresses
+   */
     public static void correctAddress(HashMap<Integer, Integer > value , String use , int instruction, int actualAddress, int modBaseValue,int baseLocation, int updateAt,HashMap<Integer, Integer > textPos,int immediate,int loc ) {
-    	//ArrayList<String> modpos=ModUseList.get(modBaseValue);
-    	
-    	
-    	//System.out.println("LIST PRINTING"+ list);
+	//System.out.println("LIST PRINTING"+ list);
     	ArrayList<Integer> list=ModText.get(modBaseValue);
    	 if(immediate==1 && actualAddress!=777) {
    		  int Number=list.get(actualAddress+1);
@@ -568,22 +600,20 @@ public class TwoPassLinker {
     int position=0;
     int counter=0;
     boolean flag=false;
-  //  System.out.println(getAddress(list.get(i),getLastDigit(list.get(i))));
+  
     for(int i=0; i<list.size();i=i+2) {
     
     	 int value1= (getAddress(list.get(i),getLastDigit(list.get(i))));
-    	 //System.out.println("THE ACTUAL ADDRESS" + actualAddress);
     	 if(actualAddress==counter) {
-    	if(value.get((baseLocation+actualAddress))==value1) {
-    		position=list.get(i+1);
-    		flag=true;
-    		break;
-    	}
- 
-    	
+    		 if(value.get((baseLocation+actualAddress))==value1) {
+    			 position=list.get(i+1);
+    			 flag=true;
+    			 break;
+    		 }
     	 }
-    	   	counter++;
+    	 counter++;
     }
+    
     if(flag==false) {
     	return;
     }
@@ -593,20 +623,13 @@ public class TwoPassLinker {
     	return;
     }
     int addressToUpdate=value.get((position));
- 
-  
     int nextAddress=addressMod(addressToUpdate);
-    
-    
-    //System.out.println( "   "+nextAddress);
     int val0=symbolTable.get(use);
 	int firstDigit=(Integer)addressToUpdate/1000;
 	int finalAddress=1000*firstDigit+val0;
- 
-  
+
     FinalAddresses.put((actualAddress+baseLocation), finalAddress);
-  
-    
+
     external.remove((actualAddress+baseLocation));
     correctAddress(value ,use,addressToUpdate ,nextAddress,modBaseValue, baseLocation,actualAddress,textPos,4,0);
     
@@ -614,7 +637,12 @@ public class TwoPassLinker {
   
 
 	}
-    }  
+    }
+    
+    /*
+     * 
+     * check if the address is bigger than the module
+     */
     public static void checkDefList(int modSize) {
     	 
     	for(int i=0; i<defSize.size();i++) {
