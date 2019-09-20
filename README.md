@@ -5,5 +5,7 @@ This program implements a two-pass linker in Java. This is done by taking in inp
 
 # To run this program:
 ->javac TwoPassLinker.java
+
 ->java TwoPassLinker
+
 (Then the user inputs the data from the keyboard.)
